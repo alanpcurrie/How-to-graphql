@@ -4,6 +4,12 @@
 */
 
 const { GraphQLServer } = require('graphql-yoga')
+/**
+  * @desc This dependency is required to make the auto-generated Prisma client work.
+  * Now you can attach the generated prisma client instance to the context so that your resolvers get access to it.
+*/
+
+const { prisma } = require('./generated/prisma-client')
 
 /**
   * @desc The links variable is used to store the links at runtime. For now, everything is stored only in-memory rather than being persisted in a database.
@@ -22,24 +28,22 @@ let links = [{
   * @return link
 */
 
-let idCount = links.length
 const resolvers = {
-  Query: {
-    info: () => `This is the API of a Hackernews Clone`,
-    feed: () => links,
-  },
-  Mutation: {
-    post: (parent, args) => {
-       const link = {
-        id: `link-${idCount++}`,
-        description: args.description,
-        url: args.url,
-      }
-      links.push(link)
-      return link
-    }
-  },
-}
+    Query: {
+      info: () => `This is the API of a Hackernews Clone`,
+      feed: (root, args, context, info) => {
+        return context.prisma.links()
+      },
+    },
+    Mutation: {
+      post: (root, args, context) => {
+        return context.prisma.createLink({
+          url: args.url,
+          description: args.description,
+        })
+      },
+    },
+  }
 
 /**
   * @desc  the schema and resolvers are bundled and passed to the GraphQLServer which is imported from graphql-yoga.
@@ -49,6 +53,7 @@ const resolvers = {
 const server = new GraphQLServer({
     typeDefs: './src/schema.graphql',
     resolvers,
+    context: { prisma }
 })
 /**
   * @desc testing the server - run node src/index.js - the server is running on http://localhost:4000
