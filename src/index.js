@@ -13,23 +13,43 @@ const { GraphQLServer } = require('graphql-yoga')
 
 const typeDefs = `
 type Query {
-    info: String!
+  info: String!
+  feed: [Link!]!
+}
+
+type Link {
+  id: ID!
+  description: String!
+  url: String!
 }
 `
+/**
+  * @desc The links variable is used to store the links at runtime. For now, everything is stored only in-memory rather than being persisted in a database.
+  * @param string
+*/
+
+let links = [{
+    id: 'link-0',
+    url: 'www.howtographql.com',
+    description: 'Fullstack tutorial for GraphQL'
+}]
 
 /**
-  * @desc The resolvers object is the actual implementation of the GraphQL schema.
-  * The structure is identical to the structure of the type definition inside typeDefs: Query.info.
-  * @param string
-  * @return string
+  * @desc A new resolver for the feed root field. A resolver always has to be named after the corresponding field from the schema definition.
+  * Three more resolvers for the fields on the Link type from the schema definition. We’ll discuss in a bit what the parent argument is that’s passed into the resolver here.
 */
 
 const resolvers = {
     Query: {
-        info: () => `this is the API of a Hackernews clone`
-        // info: () => null,
+      info: () => `This is the API of a Hackernews Clone`,
+      feed: () => links,
+    },
+    Link: {
+      id: (parent) => parent.id,
+      description: (parent) => parent.description,
+      url: (parent) => parent.url,
     }
-}
+  }
 
 /**
   * @desc  the schema and resolvers are bundled and passed to the GraphQLServer which is imported from graphql-yoga.
