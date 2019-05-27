@@ -1,3 +1,7 @@
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const { APP_SECRET, getUserId } = require('../utils')
+
 /**
   * @desc the first thing to do is encrypting the User’s password using the bcryptjs library
   *
@@ -51,6 +55,25 @@ async function signup(parent, args, context, info) {
       token,
       user,
     }
+  }
+
+    /**
+    * @desc You’re now using the getUserId function to retrieve the ID of the User.
+    * This ID is stored in the JWT that’s set at the Authorization header of the incoming HTTP request.
+    * Therefore, you know which User is creating the Link here. Recall that an unsuccessful retrieval of the userId will
+    * lead to an exception and the function scope is exited before the createLink mutation is invoked.
+    * In that case, the GraphQL response will just contain an error indicating that the user was not authenticated.
+    *
+    * You’re then also using that userId to connect the Link to be created with the User who is creating it. This is happening through a nested object write.
+  */
+
+  function post(parent, args, context, info) {
+    const userId = getUserId(context)
+    return context.prisma.createLink({
+      url: args.url,
+      description: args.description,
+      postedBy: { connect: { id: userId } },
+    })
   }
 
   module.exports = {

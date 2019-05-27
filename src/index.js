@@ -1,3 +1,6 @@
+
+
+
 /**
   * @desc graphql-yoga is a fully-featured GraphQL server.
   * It is based on Express.js and a few other libraries to help you build production-ready GraphQL servers.
@@ -16,11 +19,10 @@ const { prisma } = require('./generated/prisma-client')
   * @param string
 */
 
-let links = [{
-    id: 'link-0',
-    url: 'www.howtographql.com',
-    description: 'Fullstack tutorial for GraphQL'
-}]
+const Query = require('./resolvers/Query')
+const Mutation = require('./resolvers/Mutation')
+const User = require('./resolvers/User')
+const Link = require('./resolvers/Link')
 
 /**
   * @desc A new resolver for the feed root field. A resolver always has to be named after the corresponding field from the schema definition.
@@ -29,32 +31,31 @@ let links = [{
 */
 
 const resolvers = {
-    Query: {
-      info: () => `This is the API of a Hackernews Clone`,
-      feed: (root, args, context, info) => {
-        return context.prisma.links()
-      },
-    },
-    Mutation: {
-      post: (root, args, context) => {
-        return context.prisma.createLink({
-          url: args.url,
-          description: args.description,
-        })
-      },
-    },
-  }
+  Query,
+  Mutation,
+  User,
+  Link
+}
 
 /**
-  * @desc  the schema and resolvers are bundled and passed to the GraphQLServer which is imported from graphql-yoga.
-  * This tells the server what API operations are accepted and how they should be resolved.
+  * @desc Instead of attaching an object directly, you’re now creating the context as a function which returns the context.
+  * The advantage of this approach is that you can attach the HTTP request that carries the incoming GraphQL query (or mutation) to the context as well.
+  * This will allow your resolvers to read the Authorization header and validate if the user who submitted the request is eligible to perform the requested operation.
 */
 
+
 const server = new GraphQLServer({
-    typeDefs: './src/schema.graphql',
-    resolvers,
-    context: { prisma }
+  typeDefs: './src/schema.graphql',
+  resolvers,
+  context: request => {
+    return {
+      ...request,
+      prisma,
+    }
+  },
 })
+
+
 /**
   * @desc testing the server - run node src/index.js - the server is running on http://localhost:4000
   *  GraphQL Playground, a powerful “GraphQL IDE
