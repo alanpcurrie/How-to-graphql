@@ -38,7 +38,8 @@ const resolvers = {
   Mutation,
   Subscription,
   User,
-  Link
+  Link,
+  Vote,
 }
 
 /**
